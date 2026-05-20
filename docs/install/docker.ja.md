@@ -1,6 +1,6 @@
 # Docker インストール
 
-[README.ja.md](../../README.ja.md) の Docker セクションと同等の内容です。
+[README.md](../../README.md) の Docker セクションと同等の内容です。
 
 ## イメージの取得（GHCR）
 

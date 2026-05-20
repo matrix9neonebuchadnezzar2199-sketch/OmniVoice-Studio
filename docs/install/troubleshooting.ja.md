@@ -1,6 +1,6 @@
 # インストール・起動のトラブルシューティング
 
-よくある事象と対処です。英語版の詳細は [README.md](../../README.md) の Quickstart 内 `<details>` も参照してください。
+よくある事象と対処です。英語版の詳細は [README.en.md](../../README.en.md) の Quickstart 内 `<details>` も参照してください。
 
 ## 初回起動が非常に長い
 

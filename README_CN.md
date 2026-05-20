@@ -19,8 +19,8 @@
     <a href="#tts-引擎">TTS 引擎</a> ·
     <a href="#参与贡献">参与贡献</a> ·
     <a href="https://discord.gg/bzQavDfVV9">Discord</a> ·
-    <a href="README.md"><strong>English</strong></a> ·
-    <a href="README.ja.md">日本語</a>
+    <a href="README.en.md"><strong>English</strong></a> ·
+    <a href="README.md">日本語</a>
   </p>
 
   <p>
