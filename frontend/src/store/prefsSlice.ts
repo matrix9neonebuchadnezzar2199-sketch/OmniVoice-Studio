@@ -49,7 +49,7 @@ export const createPrefsSlice: StateCreator<PrefsSlice, [], [], PrefsSlice> = (s
   setGlossaryVisible:  (on) => set({ glossaryVisible: on }),
   setReviewMode:       (mode) => set({ reviewMode: mode }),
 
-  locale: 'en',
+  locale: 'ja',
   setLocale: (l) => set({ locale: l }),
 
   theme: 'gruvbox',

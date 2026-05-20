@@ -14,7 +14,8 @@ i18n
       ja: { translation: ja },
       'zh-CN': { translation: zhCN },
     },
-    fallbackLng: 'en',
+    fallbackLng: 'ja',
+    lng: 'ja',
     interpolation: { escapeValue: false },
     detection: {
       order: ['querystring', 'navigator', 'htmlTag'],
