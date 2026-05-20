@@ -24,7 +24,6 @@ const VoiceGallery = lazy(() => import('./pages/VoiceGallery'));
 const DonatePage = lazy(() => import('./pages/DonatePage'));
 const EnterprisePage = lazy(() => import('./pages/EnterprisePage'));
 const TranscriptionsPage = lazy(() => import('./pages/Transcriptions'));
-const StoriesEditor = lazy(() => import('./components/StoriesEditor'));
 
 import Header from './components/Header';
 import NavRail from './components/NavRail';
@@ -57,6 +56,7 @@ import { saveProject as apiSaveProject, loadProject as apiLoadProject, deletePro
 import { exportAction, exportReveal, exportRecord } from './api/exports';
 
 import { isTauri, doubleClickMaximize, fileToMediaUrl, playBlobAudio, playPing } from './utils/media';
+import i18n from './i18n';
 
 function App() {
   // First-run bootstrap: Rust spawns uv sync in a background thread and
@@ -72,12 +72,21 @@ function App() {
   const setUiScale = useAppStore(s => s.setUiScale);
   const theme = useAppStore(s => s.theme);
 
-  // Hydrate the theme on mount so that persisted preference takes effect.
+  const locale = useAppStore(s => s.locale);
+
+  // Hydrate the theme & locale so persisted preferences take effect after
+  // zustand persist rehydrates (async from localStorage) and when the user
+  // changes them at runtime.
   useEffect(() => {
     if (theme && theme !== 'gruvbox') {
       document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (locale) {
+      i18n.changeLanguage(locale);
+    }
+  }, [locale, theme]);
   const mode = useAppStore(s => s.mode);
   const setMode = useAppStore(s => s.setMode);
   const [navRailSide, setNavRailSide] = useState(() => {
@@ -131,8 +140,7 @@ function App() {
   const openVoiceProfile = useAppStore(s => s.openVoiceProfile);
   const closeVoiceProfile = useAppStore(s => s.closeVoiceProfile);
   const hideSidebar = mode === 'launchpad' || mode === 'settings' || mode === 'voice' || mode === 'donate'
-    || mode === 'queue' || mode === 'tools' || mode === 'projects' || mode === 'gallery' || mode === 'enterprise' || mode === 'transcriptions'
-    || mode === 'stories';
+    || mode === 'queue' || mode === 'tools' || mode === 'projects' || mode === 'gallery' || mode === 'enterprise' || mode === 'transcriptions';
   const availableSidebarTabs = mode === 'dub'
     ? ['projects', 'history', 'downloads']
     : (mode === 'clone' || mode === 'design')
@@ -915,12 +923,6 @@ function App() {
           <ErrorBoundary name="transcriptions">
             <Suspense fallback={<LazyFallback />}>
               <TranscriptionsPage />
-            </Suspense>
-          </ErrorBoundary>
-        ) : mode === 'stories' ? (
-          <ErrorBoundary name="stories">
-            <Suspense fallback={<LazyFallback />}>
-              <StoriesEditor profiles={profiles} />
             </Suspense>
           </ErrorBoundary>
         ) : mode === 'donate' ? (
