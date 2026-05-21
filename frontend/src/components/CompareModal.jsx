@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Scale, Fingerprint, Play, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { PRESETS } from '../utils/constants';
 import { generateSpeech } from '../api/generate';
 import { Button, Panel, Field, Textarea, Select } from '../ui';
@@ -79,10 +80,10 @@ export default function CompareModal({
       const audioB = await generateVoice(compareVoiceB);
       setCompareResultB(audioB);
       setCompareProgress('');
-      toast.success('Comparison complete!');
+      toastOk('Comparison complete!');
       loadHistory();
     } catch (err) {
-      toast.error('Play failed: ' + err.message);
+      toastErr('Play failed: ' + err.message);
       setCompareProgress('');
     } finally {
       setIsComparing(false);

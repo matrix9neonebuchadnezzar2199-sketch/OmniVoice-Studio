@@ -10,6 +10,7 @@
  * (loading-model → recording → transcribing → done) with a live timer.
  */
 import type { StateCreator } from 'zustand';
+import { uiMsg } from '../i18n/localizeApi';
 
 export type PillStage =
   | 'idle'
@@ -73,7 +74,7 @@ export const createPillSlice: StateCreator<PillSlice, [], [], PillSlice> = (set)
 
   showPill: (stage, label, opts) => set({
     stage,
-    label,
+    label: uiMsg(label),
     progress: opts?.progress ?? null,
     startedAt: Date.now(),
     error: null,
@@ -82,14 +83,14 @@ export const createPillSlice: StateCreator<PillSlice, [], [], PillSlice> = (set)
   }),
 
   setPillProgress: (progress) => set({ progress }),
-  setPillLabel: (label) => set({ label }),
+  setPillLabel: (label) => set({ label: uiMsg(label) }),
 
   dismissPill: () => set(INITIAL),
 
   completePill: (label = 'Done') => {
     set({
       stage: 'done',
-      label,
+      label: uiMsg(label),
       progress: 100,
       error: null,
       cancellable: false,
@@ -103,9 +104,9 @@ export const createPillSlice: StateCreator<PillSlice, [], [], PillSlice> = (set)
 
   errorPill: (error) => set({
     stage: 'error',
-    label: 'Error',
+    label: uiMsg('Error'),
     progress: null,
-    error,
+    error: uiMsg(error),
     cancellable: false,
     visible: true,
   }),

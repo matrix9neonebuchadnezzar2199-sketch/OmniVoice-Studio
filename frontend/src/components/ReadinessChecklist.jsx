@@ -1,19 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertTriangle, XCircle, Loader } from 'lucide-react';
 import { usePreflight, useModelStatus } from '../api/hooks';
+import { localizePreflightCheck } from '../i18n/localizeApi';
+import { errMsg } from '../i18n/notify';
 import './ReadinessChecklist.css';
-
-/**
- * ReadinessChecklist — system readiness panel.
- *
- * Consumes the existing /setup/preflight endpoint (OS, RAM, GPU, ffmpeg,
- * yt-dlp, network) plus /model/status, and renders a compact pass/warn/fail
- * checklist. Mirrors into Settings and renders as empty-state on the
- * launchpad when no project is loaded.
- *
- * Hides itself when all gates are green (user doesn't need to see
- * "everything is fine" every time they open the app).
- */
 
 const StatusIcon = ({ status, size = 14 }) => {
   switch (status) {
@@ -26,68 +17,56 @@ const StatusIcon = ({ status, size = 14 }) => {
 };
 
 export default function ReadinessChecklist({ compact = false, showWhenAllPass = false }) {
+  const { t } = useTranslation();
   const { data: preflight, isLoading: preflightLoading } = usePreflight();
   const { data: modelData, isLoading: modelLoading } = useModelStatus();
 
   const isLoading = preflightLoading || modelLoading;
   const modelStatus = modelData?.status ?? 'idle';
+  const modelDetail = modelData?.detail || '';
+  const modelErr = modelData?.error || null;
 
-  // Build the checklist from preflight data + model status
   const checks = [];
 
-  // Model readiness (from /model/status)
-  const modelDetail = modelData?.detail || '';
-  const modelErr    = modelData?.error || null;
   const modelCheck = {
     id: 'asr-model',
-    label: 'ASR Model',
+    label: t('readiness.asr_model'),
     status: modelStatus === 'ready' ? 'pass'
       : modelStatus === 'loading' ? 'loading'
       : modelStatus === 'error' || modelData?.sub_stage === 'error' ? 'fail'
       : 'warn',
-    detail: modelStatus === 'ready' ? 'Loaded and ready'
-      : modelStatus === 'loading' ? (modelDetail || 'Loading… (this may take 1-2 minutes on first run)')
-      : (modelData?.sub_stage === 'error' ? (modelErr || 'Failed to load') : 'Not loaded yet — will load on first transcription'),
+    detail: modelStatus === 'ready' ? t('readiness.asr_ready')
+      : modelStatus === 'loading' ? (modelDetail || t('readiness.asr_loading'))
+      : (modelData?.sub_stage === 'error' ? errMsg(modelErr || t('readiness.asr_load_failed')) : t('readiness.asr_not_loaded')),
     fix: (modelStatus === 'error' || modelData?.sub_stage === 'error')
-      ? (modelErr ? `Error: ${modelErr}. Check logs and try restarting.` : 'Check logs for model loading errors. Try restarting.')
+      ? (modelErr
+        ? t('readiness.asr_error_fix', { error: errMsg(modelErr) })
+        : t('readiness.asr_error_fix_generic'))
       : null,
   };
   checks.push(modelCheck);
 
-  // Add preflight checks
   if (preflight?.checks) {
-    // Filter to the most relevant checks for the checklist
     const relevant = ['gpu', 'ffmpeg', 'yt-dlp', 'ram'];
     for (const check of preflight.checks) {
       if (relevant.includes(check.id)) {
-        checks.push(check);
+        checks.push(localizePreflightCheck(check, t));
       }
     }
   }
 
-  // LLM configuration (check for translate endpoint)
-  const llmCheck = {
+  const netPass = preflight?.checks?.find((c) => c.id === 'network')?.status === 'pass';
+  checks.push({
     id: 'llm',
-    label: 'LLM (Cinematic)',
+    label: t('readiness.llm_label'),
     status: 'warn',
-    detail: 'Configure TRANSLATE_BASE_URL for Cinematic translation quality',
-    fix: 'Set TRANSLATE_BASE_URL and TRANSLATE_API_KEY environment variables. Works with Ollama, OpenAI, LM Studio, etc.',
-  };
-  // If we have preflight and there's a network check passing, LLM is at least possible
-  if (preflight?.checks) {
-    const netCheck = preflight.checks.find(c => c.id === 'network');
-    if (netCheck?.status === 'pass') {
-      llmCheck.detail = 'Optional — set TRANSLATE_BASE_URL for Cinematic quality';
-    }
-  }
-  checks.push(llmCheck);
+    detail: netPass ? t('readiness.llm_detail_optional') : t('readiness.llm_detail_required'),
+    fix: t('readiness.llm_fix'),
+  });
 
-  // Determine if all critical checks pass
-  const allPass = checks.every(c => c.status === 'pass' || c.status === 'warn');
-  const anyFail = checks.some(c => c.status === 'fail');
-  const criticalFails = checks.filter(c => c.status === 'fail');
+  const allPass = checks.every((c) => c.status === 'pass' || c.status === 'warn');
+  const anyFail = checks.some((c) => c.status === 'fail');
 
-  // Hide when everything is fine (unless explicitly asked to show)
   if (!showWhenAllPass && allPass && !isLoading) return null;
 
   if (isLoading) {
@@ -95,27 +74,26 @@ export default function ReadinessChecklist({ compact = false, showWhenAllPass = 
       <div className="readiness-checklist">
         <div className="readiness-checklist__title">
           <span className="readiness-checklist__title-icon">🔍</span>
-          Checking system…
+          {t('readiness.checking')}
         </div>
       </div>
     );
   }
 
   if (compact) {
-    // Compact mode: just show failing/warning items
-    const issues = checks.filter(c => c.status !== 'pass');
+    const issues = checks.filter((c) => c.status !== 'pass');
     if (issues.length === 0) {
       return (
         <div className="readiness-checklist__all-pass">
           <CheckCircle size={14} />
-          All systems ready
+          {t('readiness.all_ready')}
         </div>
       );
     }
     return (
       <div className="readiness-checklist">
         <ul className="readiness-checklist__list">
-          {issues.map(check => (
+          {issues.map((check) => (
             <li key={check.id} className="readiness-checklist__item">
               <span className={`readiness-checklist__status readiness-checklist__status--${check.status}`}>
                 <StatusIcon status={check.status} />
@@ -137,10 +115,10 @@ export default function ReadinessChecklist({ compact = false, showWhenAllPass = 
         <span className="readiness-checklist__title-icon">
           {anyFail ? '⚠️' : '✅'}
         </span>
-        System Readiness
+        {t('readiness.title')}
       </div>
       <ul className="readiness-checklist__list">
-        {checks.map(check => (
+        {checks.map((check) => (
           <li key={check.id} className="readiness-checklist__item">
             <span className={`readiness-checklist__status readiness-checklist__status--${check.status}`}>
               <StatusIcon status={check.status} />

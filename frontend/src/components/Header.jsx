@@ -5,16 +5,29 @@ import { Globe, Fingerprint, Wand2, Film, FolderOpen, RefreshCw, Settings2, Chev
 import { Button, Badge } from '../ui';
 import NotificationPanel from './NotificationPanel';
 
+/** i18n key under nav.* for the header title */
+const VIEW_LABEL_KEY = {
+  launchpad: 'nav.launchpad',
+  clone: 'nav.clone',
+  design: 'nav.design',
+  dub: 'nav.dub',
+  projects: 'nav.omnidrive',
+  gallery: 'nav.gallery',
+  transcriptions: 'nav.transcripts',
+  settings: 'nav.settings',
+  enterprise: 'enterprise.title',
+};
+
 const VIEW_META = {
-  launchpad:  { label: 'Launchpad',       Icon: Globe,       accent: '#f3a5b6', kicker: 'Studio' },
-  clone:      { label: 'Voice Clone',     Icon: Fingerprint, accent: '#d3869b', kicker: 'Studio' },
-  design:     { label: 'Voice Design',    Icon: Wand2,       accent: '#8ec07c', kicker: 'Studio' },
-  dub:        { label: 'Dubbing',         Icon: Film,        accent: '#fe8019', kicker: 'Studio' },
-  projects:   { label: 'OmniDrive',      Icon: FolderOpen,  accent: '#83a598', kicker: 'Library' },
-  gallery:    { label: 'Gallery',         Icon: Library,     accent: '#b8bb26', kicker: 'Library' },
-  transcriptions: { label: 'Transcriptions', Icon: FileText, accent: '#d3869b', kicker: 'Library' },
-  settings:   { label: 'Settings',        Icon: Settings2,   accent: '#fabd2f', kicker: 'Preferences' },
-  enterprise: { label: 'Commercial License', Icon: Building2, accent: '#fe8019', kicker: 'Licensing' },
+  launchpad:  { Icon: Globe,       accent: '#f3a5b6', kicker: 'Studio' },
+  clone:      { Icon: Fingerprint, accent: '#d3869b', kicker: 'Studio' },
+  design:     { Icon: Wand2,       accent: '#8ec07c', kicker: 'Studio' },
+  dub:        { Icon: Film,        accent: '#fe8019', kicker: 'Studio' },
+  projects:   { Icon: FolderOpen,  accent: '#83a598', kicker: 'Library' },
+  gallery:    { Icon: Library,     accent: '#b8bb26', kicker: 'Library' },
+  transcriptions: { Icon: FileText, accent: '#d3869b', kicker: 'Library' },
+  settings:   { Icon: Settings2,   accent: '#fabd2f', kicker: 'Preferences' },
+  enterprise: { Icon: Building2, accent: '#fe8019', kicker: 'Licensing' },
 };
 
 function WaveBars({ color = '#f3a5b6', active }) {
@@ -147,7 +160,7 @@ export default function Header({
           <ChevronRight size={10} color="#504945" className="hq-breadcrumb-sep" />
           <span className="hq-view-label" style={labelStyle}>
             <ViewIcon size={12} className="hq-view-icon" />
-            {view.label}
+            {t(VIEW_LABEL_KEY[mode] || VIEW_LABEL_KEY.launchpad)}
           </span>
           {activeProjectName ? (
             <>

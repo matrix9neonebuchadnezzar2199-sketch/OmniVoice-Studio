@@ -5,6 +5,7 @@ import {
   Download as DownloadIcon, Volume2, Search, X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { API } from '../api/client';
 import { clearDubHistory } from '../api/dub';
 import { clearHistory as clearGenHistory } from '../api/generate';
@@ -84,7 +85,7 @@ export default function Sidebar(props) {
     await clearDubHistory();
     await loadHistory();
     await loadDubHistory();
-    toast.success('History cleared');
+    toastOk('History cleared');
   };
 
   const tabCount = {

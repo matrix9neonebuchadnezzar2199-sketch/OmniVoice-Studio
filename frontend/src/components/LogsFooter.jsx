@@ -4,6 +4,7 @@ import {
   AlertTriangle, AlertCircle, Info, FileText, Heart, Bell,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { clearSystemLogs, clearTauriLogs } from '../api/system';
 import { useSystemLogs, useTauriLogs, useClearLogs, useClearTauriLogs } from '../api/hooks';
 import { getFrontendLogs, clearFrontendLogs } from '../utils/consoleBuffer';
@@ -329,9 +330,9 @@ export default function LogsFooter() {
       else if (active === 'tauri')    await clearTauriLogs();
       else if (active === 'frontend') clearFrontendLogs();
       setLines(prev => ({ ...prev, [active]: [] }));
-      toast.success(`${active} log cleared`);
+      toastOk(`${active} log cleared`);
     } catch (e) {
-      toast.error(`Clear failed: ${e?.message || e}`);
+      toastErr(`Clear failed: ${e?.message || e}`);
     }
   };
 
@@ -339,9 +340,9 @@ export default function LogsFooter() {
     try {
       const raw = (lines[active] || []).join('\n');
       await navigator.clipboard.writeText(raw);
-      toast.success(`Copied ${active} log`);
+      toastOk(`Copied ${active} log`);
     } catch (e) {
-      toast.error(`Copy failed: ${e?.message || e}`);
+      toastErr(`Copy failed: ${e?.message || e}`);
     }
   };
 
@@ -365,9 +366,9 @@ export default function LogsFooter() {
     }).join('\n\n');
     try {
       await navigator.clipboard.writeText(header + body);
-      toast.success('Diagnostic report copied — paste it into a GitHub issue.');
+      toastOk('Diagnostic report copied — paste it into a GitHub issue.');
     } catch (e) {
-      toast.error(`Report failed: ${e?.message || e}`);
+      toastErr(`Report failed: ${e?.message || e}`);
     }
   };
 

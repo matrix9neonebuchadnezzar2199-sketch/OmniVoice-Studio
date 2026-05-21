@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Wrench, Sparkles, Activity, Target } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { Panel, Button, Input, Field, Textarea, Badge } from '../ui';
 import { apiPost } from '../api/client';
 import './ToolsPage.css';
@@ -38,7 +39,7 @@ function DirectorTool() {
   const run = async () => {
     setBusy(true);
     try { setResult(await apiPost('/tools/direction', { text })); }
-    catch (e) { toast.error(t('tools.parse_failed', { message: e.message })); }
+    catch (e) { toastErr(t('tools.parse_failed', { message: errMsg(e.message) })); }
     finally { setBusy(false); }
   };
 
@@ -93,7 +94,7 @@ function RateFitTool() {
       setResult(await apiPost('/tools/rate-fit', {
         text, slot_seconds: Number(slot), target_lang: lang,
       }));
-    } catch (e) { toast.error(t('tools.fit_failed', { message: e.message })); }
+    } catch (e) { toastErr(t('tools.fit_failed', { message: errMsg(e.message) })); }
     finally { setBusy(false); }
   };
 
@@ -136,7 +137,7 @@ function ProbeTool() {
   const run = async () => {
     setBusy(true);
     try { setResult(await apiPost('/tools/probe', { path })); }
-    catch (e) { toast.error(t('tools.probe_failed', { message: e.message })); }
+    catch (e) { toastErr(t('tools.probe_failed', { message: errMsg(e.message) })); }
     finally { setBusy(false); }
   };
 

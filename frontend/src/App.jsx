@@ -45,6 +45,7 @@ import useDubWorkflow from './hooks/useDubWorkflow';
 const LazyFallback = () => <div className="app-lazy-fallback">Loading…</div>;
 
 import { Toaster, toast } from 'react-hot-toast';
+import { toastErr, toastOk } from './i18n/notify';
 import {
   POPULAR_LANGS, POPULAR_ISO, TAGS, CATEGORIES, PRESETS, CLONE_MAX_SECONDS,
 } from './utils/constants';
@@ -511,18 +512,18 @@ function App() {
       if (!destPath) return; // User cancelled
 
       await exportAction({ source_filename: sourceIdentifier, destination_path: destPath, mode });
-      toast.success(`Exported: ${fallbackName}`);
+      toastOk(`Exported: ${fallbackName}`);
       loadExportHistory();
     } catch (err) {
       console.error(err);
-      toast.error(`Export failed: ${err?.message || err}`);
+      toastErr(`Export failed: ${err?.message || err}`);
     }
   };
   const revealInFolder = async (filePath) => {
     try {
       await exportReveal({ path: filePath });
     } catch (err) {
-      toast.error(`Could not open folder: ${err.message}`);
+      toastErr(`Could not open folder: ${err.message}`);
     }
   };
   const parseFilenameFromContentDisposition = (header) => {
@@ -556,14 +557,14 @@ function App() {
           throw new Error(err.detail || 'Save failed');
         }
         const data = await res.json();
-        toast.success(`Saved: ${data.path}`, { id: fallbackName });
+        toastOk(`Saved: ${data.path}`, { id: fallbackName });
         try {
           await exportRecord({ filename: data.display_name || fallbackName, destination_path: data.path, mode: modeGuess });
           loadExportHistory();
         } catch (err) { console.warn('exportRecord (Tauri save path) failed:', err); }
       } catch (err) {
         console.error(err);
-        toast.error(`Save error: ${err.message}`, { id: fallbackName });
+        toastErr(`Save error: ${err.message}`, { id: fallbackName });
       }
       return;
     }
@@ -584,14 +585,14 @@ function App() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(localUrl);
-      toast.success(`Downloaded ${finalName}`, { id: fallbackName });
+      toastOk(`Downloaded ${finalName}`, { id: fallbackName });
       try {
         await exportRecord({ filename: finalName, destination_path: `~/Downloads/${finalName}`, mode: modeGuess });
         loadExportHistory();
       } catch (err) { console.warn('exportRecord (browser download path) failed:', err); }
     } catch (err) {
       console.error(err);
-      toast.error(`Download error: ${err.message}`, { id: fallbackName });
+      toastErr(`Download error: ${err.message}`, { id: fallbackName });
     }
   };
   // Pre-flight for audio/video exports. If any segments are at preview
@@ -639,7 +640,7 @@ function App() {
   // ═══ STUDIO PROJECT CRUD ═══
   const saveProject = async () => {
     if (dubStep === 'idle') {
-      toast.error("Please click 'Upload & Transcribe' first so the video is processed on the server before saving.");
+      toastErr("Please click 'Upload & Transcribe' first so the video is processed on the server before saving.");
       return;
     }
     const name = activeProjectName || dubFilename || `Project ${new Date().toLocaleString()}`;
@@ -657,10 +658,10 @@ function App() {
     try {
       const data = await apiSaveProject(statePayload, activeProjectId);
       setActiveProject(data.id, name);
-      toast.success(activeProjectId ? 'Project saved' : 'Project created');
+      toastOk(activeProjectId ? 'Project saved' : 'Project created');
       loadProjects();
     } catch (err) {
-      toast.error('Save failed: ' + err.message);
+      toastErr('Save failed: ' + err.message);
     }
   };
 
@@ -688,9 +689,9 @@ function App() {
       // the last generate.
       setLastGenFingerprints(s.segHashes || {});
       setSpeakerClones(s.speakerClones || {});
-      toast.success(`Opened: ${data.name}`);
+      toastOk(`Opened: ${data.name}`);
     } catch (err) {
-      toast.error(err.message);
+      toastErr(err.message);
     }
   };
 
@@ -703,8 +704,8 @@ function App() {
         setActiveProject(null);
       }
       loadProjects();
-      toast.success('Project deleted');
-    } catch (err) { toast.error(err.message); }
+      toastOk('Project deleted');
+    } catch (err) { toastErr(err.message); }
   };
 
   const restoreDubHistory = (item) => {
@@ -743,7 +744,7 @@ function App() {
     
     // Switch to studio tab
     setSidebarTab('projects');
-    toast.success('Restored previous generation state');
+    toastOk('Restored previous generation state');
   };
 
   const deleteHistory = async (id, type) => {
@@ -756,9 +757,9 @@ function App() {
       } else {
         loadHistory();
       }
-      toast.success('History item deleted');
+      toastOk('History item deleted');
     } catch (err) {
-      toast.error(err.message);
+      toastErr(err.message);
     }
   };
 
@@ -835,7 +836,7 @@ function App() {
               file={pendingTrimFile}
               maxSeconds={CLONE_MAX_SECONDS}
               onCancel={() => setPendingTrimFile(null)}
-              onConfirm={(trimmed) => { setPendingTrimFile(null); setRefAudio(trimmed); setSelectedProfile(null); toast.success('Trimmed audio loaded'); }}
+              onConfirm={(trimmed) => { setPendingTrimFile(null); setRefAudio(trimmed); setSelectedProfile(null); toastOk('Trimmed audio loaded'); }}
             />
           </Suspense>
         </ErrorBoundary>
@@ -857,8 +858,8 @@ function App() {
         onFlushMemory={async (unloadModel) => {
           try {
             const r = await apiFlushMemory(unloadModel);
-            toast.success(`Flushed — RAM ${r.ram_after}G · VRAM ${r.vram_after}G${r.unloaded_model ? ' · model unloaded' : ''}`);
-          } catch (e) { toast.error('Flush failed: ' + e.message); }
+            toastOk(`Flushed — RAM ${r.ram_after}G · VRAM ${r.vram_after}G${r.unloaded_model ? ' · model unloaded' : ''}`);
+          } catch (e) { toastErr('Flush failed: ' + e.message); }
         }}
       />
 

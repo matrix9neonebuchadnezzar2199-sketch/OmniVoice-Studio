@@ -9,19 +9,20 @@
  *      min dependency install.
  */
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './BootstrapSplash.css';
 
 // Vite injects package.json version at build time.
 const APP_VERSION = __APP_VERSION__ || '0.0.0';
 
-const STAGE_LABEL = {
-  checking:           'Checking environment…',
-  downloading_uv:     'Downloading uv (Python package manager)…',
-  creating_venv:      'Creating Python virtual environment…',
-  installing_deps:    'Installing dependencies — first run, 5–10 min.',
-  starting_backend:   'Starting backend…',
-  ready:              'Ready',
-  failed:             'Setup failed',
+const STAGE_LABEL_KEY = {
+  checking: 'bootstrap.checking',
+  downloading_uv: 'bootstrap.downloading_uv',
+  creating_venv: 'bootstrap.creating_venv',
+  installing_deps: 'bootstrap.installing_deps',
+  starting_backend: 'bootstrap.starting_backend',
+  ready: 'bootstrap.ready',
+  failed: 'bootstrap.failed',
 };
 
 const STEPS = [
@@ -59,7 +60,8 @@ function formatBytes(n) {
 }
 
 export function BootstrapSplash({ stage, message }) {
-  const label = STAGE_LABEL[stage] || stage;
+  const { t } = useTranslation();
+  const label = STAGE_LABEL_KEY[stage] ? t(STAGE_LABEL_KEY[stage]) : stage;
   const stepIndex = Math.max(0, STEPS.indexOf(stage));
   const isFailed = stage === 'failed';
   const [logs, setLogs] = useState([]);
@@ -271,7 +273,7 @@ export function BootstrapSplash({ stage, message }) {
                     'pending'
                   }
                 >
-                  {STAGE_LABEL[s]}
+                  {STAGE_LABEL_KEY[s] ? t(STAGE_LABEL_KEY[s]) : s}
                 </li>
               ))}
             </ol>

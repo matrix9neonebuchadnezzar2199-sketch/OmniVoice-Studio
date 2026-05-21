@@ -6,6 +6,7 @@
     "delete": "削除",
     "loading": "読み込み中…",
     "error": "問題が発生しました",
+    "error_title": "エラー",
     "languages_count": "646 言語",
     "clear": "クリア",
     "refresh": "更新",
@@ -22,7 +23,7 @@
     "launchpad": "Launchpad",
     "clone": "クローン",
     "design": "デザイン",
-    "dub": "ダブ",
+    "dub": "ダビング",
     "gallery": "ギャラリー",
     "transcripts": "文字起こし",
     "omnidrive": "OmniDrive",
@@ -210,6 +211,9 @@
     "microsoft_help": "Microsoft Translator エンジン用。Azure Portal でキーを取得してください。",
     "microsoft_base_url": "Microsoft Translator Base URL",
     "microsoft_base_url_help": "カスタム Azure Translator エンドポイント（既定: https://api.cognitive.microsofttranslator.com）。",
+    "llm_fill_url_key": "Base URL と API Key を入力してください",
+    "llm_saved": "LLM 設定を保存しました",
+    "save_failed_msg": "保存に失敗しました: {{message}}",
     "llm_base_url": "LLM Base URL",
     "llm_base_url_help": "Cinematic 品質または LLM エンジン用。OpenAI 互換エンドポイント（OpenAI、Ollama、LM Studio など）。",
     "llm_model": "LLM Model",
@@ -248,7 +252,11 @@
     "no_tauri_log": "Tauri ログはまだありません — デスクトップビルドで起動すると生成されます",
     "empty_frontend": "フロントエンドのコンソール出力はまだありません。アプリを操作すると console.* がここに表示されます。",
     "empty_tauri": "Tauri ログは利用できません。デスクトップシェルでのみ利用可能です。",
-    "empty_backend": "ランタイムログは空です。バックエンドのログがここに表示されます。"
+    "empty_backend": "ランタイムログは空です。バックエンドのログがここに表示されます。",
+    "cleared": "{{name}} ログをクリアしました",
+    "copied": "{{name}} ログをコピーしました",
+    "diagnostic_copied": "診断レポートをコピーしました — GitHub の issue に貼り付けてください",
+    "report_failed": "レポートの作成に失敗しました: {{message}}"
   },
   "dub": {
     "transcribe": "文字起こし",
@@ -258,7 +266,7 @@
     "no_video": "動画が読み込まれていません",
     "segments": "セグメント",
     "speakers": "話者",
-    "video_dubbing_studio": "Video Dubbing Studio",
+    "video_dubbing_studio": "動画ダビングスタジオ",
     "drop_here": "動画または音声をここにドロップ",
     "paste_url": "…または YouTube / 動画 URL を貼り付け",
     "ingest": "取り込み",
@@ -269,7 +277,7 @@
     "change_file": "ファイルを変更",
     "import_srt": ".srt をインポート",
     "import_srt_alt": "代わりに .srt をインポート",
-    "cast": "CAST",
+    "cast": "キャスト",
     "speaker": "話者 {{n}}:",
     "default": "既定",
     "language": "言語",
@@ -658,7 +666,239 @@
     "footer_downloads": "ダウンロード元: huggingface.co",
     "open_finder": "Finder で開く",
     "open": "開く",
-    "install_required_models": "続行するには上記の必須モデルをインストールしてください。"
+    "install_required_models": "続行するには上記の必須モデルをインストールしてください。",
+    "preflight": {
+      "checks": {
+        "os": { "label": "オペレーティングシステム" },
+        "python": { "label": "Python ランタイム" },
+        "ram": {
+          "label": "システム RAM",
+          "warn": {
+            "fix": "長い動画ではスワップが発生しやすくなります。ダビング中は他のアプリを終了してください。"
+          },
+          "fail": {
+            "fix": "初回ダビングでメモリ不足になる可能性があります。他のアプリを終了するか、RAM を増設してください。"
+          }
+        },
+        "disk": {
+          "label": "ディスク容量",
+          "fail": {
+            "fix": "空き容量を確保するか、HF_HOME を容量の大きいパーティションに変更してください。"
+          }
+        },
+        "hf_cache_writable": {
+          "label": "Hugging Face キャッシュ（書き込み可）",
+          "fail": {
+            "fix": "キャッシュディレクトリの書き込み権限を修正するか、HF_HOME を別の場所に設定してください。"
+          }
+        },
+        "ffmpeg": {
+          "label": "FFmpeg",
+          "fail": {
+            "fix": "パッケージマネージャで ffmpeg をインストールしてください（例: apt install ffmpeg / brew install ffmpeg）。"
+          }
+        },
+        "ffprobe": {
+          "label": "FFprobe",
+          "warn": {
+            "detail": "ffmpeg に同梱の ffprobe が見つかりません。",
+            "fix": "システムの ffmpeg（ffprobe 同梱）をインストールすると /tools/probe が使えるようになります。"
+          }
+        },
+        "yt-dlp": {
+          "label": "yt-dlp",
+          "warn": {
+            "detail": "システム PATH に yt-dlp がありません。",
+            "fix": "Voice Gallery の YouTube 取り込みには yt-dlp が必要です。公式リリースからバイナリを取得し PATH に置いてください。"
+          }
+        },
+        "gpu": {
+          "label": "GPU アクセラレーション",
+          "warn": {
+            "detail": "互換 GPU が検出されませんでした — CPU のみで動作します。",
+            "fix": "ダビングは可能ですが GPU 利用時より約 10 倍遅くなります。NVIDIA / AMD カードがある場合はドライバを確認してください。"
+          },
+          "fail": {
+            "fix": "NVIDIA ドライバを R555 以上に更新するか、このまま CPU で続行してください（約 10 倍遅くなります）。"
+          }
+        },
+        "network": {
+          "label": "ネットワーク（huggingface.co）",
+          "pass": { "detail": "到達可能" },
+          "fail": {
+            "detail": "ポート 443 で到達できません",
+            "fix": "インターネット接続、VPN、ファイアウォールで huggingface.co が許可されているか確認してください。"
+          }
+        }
+      }
+    }
+  },
+  "toast": {
+    "upload_cancelled": "アップロードをキャンセルしました",
+    "ingest_cancelled": "取り込みをキャンセルしました",
+    "retry_cancelled": "再試行をキャンセルしました",
+    "dubbing_aborted": "ダビングを中止しました",
+    "generation_aborted": "生成を中止しました",
+    "need_video_for_srt": "先に動画をアップロードまたは URL 取り込みしてください（字幕を紐づけるジョブがありません）",
+    "segments_already_clean": "セグメントは既に整理済みです",
+    "enter_text": "テキストを入力してください",
+    "need_ref_audio": "参照音声をアップロードするか、声プロファイルを選択してください",
+    "recording_too_short": "録音が短すぎます",
+    "recording_raw_loaded": "録音を読み込みました（ノイズ除去は利用できません）",
+    "recording_cleaned": "録音をクリーンアップして読み込みました",
+    "mic_denied": "マイクへのアクセスが拒否されました",
+    "mic_denied_hint": "マイクへのアクセスが拒否されました。{{hint}}",
+    "need_name_and_ref": "名前と参照音声が必要です",
+    "preview_ready": "プレビューの準備ができました",
+    "playback_failed": "再生に失敗しました",
+    "voice_saved": "声をプロファイルに保存しました",
+    "comparison_complete": "比較が完了しました",
+    "history_cleared": "履歴をクリアしました",
+    "glossary_needs_project": "用語集には読み込み済みのプロジェクトが必要です",
+    "pick_target_lang": "先に翻訳先言語を選択してください",
+    "no_segments_scan": "スキャンするセグメントがありません",
+    "auto_extract_empty": "自動抽出では新しい用語は見つかりませんでした",
+    "upload_before_save": "保存する前に「アップロードして文字起こし」でサーバー側の処理を完了してください",
+    "project_saved": "プロジェクトを保存しました",
+    "project_created": "プロジェクトを作成しました",
+    "restored_generation": "前回の生成状態を復元しました",
+    "history_deleted": "履歴項目を削除しました",
+    "trimmed_loaded": "トリムした音声を読み込みました",
+    "opened_project": "開きました: {{name}}",
+    "project_deleted": "プロジェクトを削除しました",
+    "models_already_installed": "推奨モデルは既にインストール済みです",
+    "latest_version": "最新バージョンです",
+    "installed_relaunch": "インストール完了 — 再起動します",
+    "updater_desktop_only": "アップデータはデスクトップアプリでのみ動作します",
+    "diagnostics_copied": "診断情報をコピーしました —  issue に貼り付けてください",
+    "frontend_logs_cleared": "フロントエンドログをクリアしました",
+    "backend_logs_cleared": "バックエンドログをクリアしました",
+    "nothing_to_clear_tauri": "クリアするものはありません（Tauri ログファイルがまだありません）",
+    "reset_default": "既定に戻しました",
+    "hf_token_set": "Hugging Face トークンを設定しました — ダウンロードが高速化されます",
+    "done": "完了",
+    "ingested_url": "取り込みました: {{url}}",
+    "exported": "エクスポートしました: {{name}}",
+    "saved_path": "保存しました: {{path}}",
+    "downloaded": "ダウンロードしました: {{name}}",
+    "flushed": "メモリを解放しました — {{detail}}",
+    "srt_import_note": "{{note}}",
+    "cleaned_fragments": "{{count}} 件の断片セグメントを整理しました",
+    "translated_segments": "{{note}}",
+    "translate_segments_failed": "翻訳に失敗したセグメントがあります: {{detail}}",
+    "download_started": "ダウンロードを開始しました: {{detail}}",
+    "cleared_tauri_logs": "{{detail}}",
+    "shortcut_set": "ディクテーションショートカット: {{shortcut}}",
+    "glossary_auto_added": "自動抽出で {{count}} 件の用語を追加しました。翻訳前に内容を確認してください。",
+    "cinematic_needs_llm": "シネマティック品質には LLM が必要です — TRANSLATE_BASE_URL と TRANSLATE_API_KEY を設定してください（Ollama でも可）。高速モードにフォールバックします。",
+    "cinematic_fallback": "高速モードにフォールバックしました",
+    "voice_locked": "声をロックしました。以降の生成で同一性が保たれます。",
+    "voice_unlocked": "声のロックを解除しました。生成結果は再びばらつきます。"
+  },
+  "pill": {
+    "preparing_video": "動画を準備中…",
+    "extracting": "音声とシーンを抽出中…",
+    "transcribing": "音声を文字起こし中…",
+    "transcription_complete": "文字起こしが完了しました",
+    "downloading_video": "動画をダウンロード中…",
+    "generating_dub": "ダブを生成中…",
+    "dub_complete": "ダブが完了しました",
+    "model_ready": "モデルの準備ができました",
+    "regenerating": "{{count}} セグメントを再生成中…",
+    "generating_progress": "{{detail}}"
+  },
+  "bootstrap": {
+    "checking": "環境を確認中…",
+    "downloading_uv": "uv（Python パッケージマネージャ）をダウンロード中…",
+    "creating_venv": "Python 仮想環境を作成中…",
+    "installing_deps": "依存関係をインストール中 — 初回は 5〜10 分かかります",
+    "starting_backend": "バックエンドを起動中…",
+    "ready": "準備完了",
+    "failed": "セットアップに失敗しました"
+  },
+  "voice_gallery": {
+    "download_failed": "ダウンロードに失敗しました: {{message}}",
+    "saved_profile": "声をプロファイルに保存しました",
+    "save_profile_failed": "プロファイルの保存に失敗しました",
+    "trim_load_failed": "トリム用音声の読み込みに失敗しました: {{message}}",
+    "trim_upload_failed": "切り抜き音声のアップロードに失敗しました: {{message}}"
+  },
+  "readiness": {
+    "checking": "システムを確認中…",
+    "all_ready": "すべての準備が整いました",
+    "title": "システム準備状況",
+    "asr_model": "ASR モデル",
+    "asr_ready": "読み込み済み・利用可能",
+    "asr_loading": "読み込み中…（初回は 1〜2 分かかることがあります）",
+    "asr_not_loaded": "未読み込み — 初回の文字起こし時に読み込まれます",
+    "asr_load_failed": "読み込みに失敗しました",
+    "asr_error_fix": "エラー: {{error}}。ログを確認し、再起動を試してください。",
+    "asr_error_fix_generic": "モデル読み込みエラー。ログを確認し、再起動を試してください。",
+    "llm_label": "LLM（シネマティック）",
+    "llm_detail_required": "シネマティック翻訳には TRANSLATE_BASE_URL の設定が必要です",
+    "llm_detail_optional": "任意 — シネマティック品質には TRANSLATE_BASE_URL を設定",
+    "llm_fix": "TRANSLATE_BASE_URL と TRANSLATE_API_KEY を設定してください（Ollama / OpenAI / LM Studio 等）。"
+  },
+  "errors": {
+    "generic": "エラー: {{message}}",
+    "unknown": "不明なエラー",
+    "transcribe_stream_dropped": "文字起こしストリームがセグメントを返す前に切断されました。ASR（Whisper 系）が読み込めていない可能性があります。バックエンドログを確認し、設定 → モデルで Whisper / WhisperX をインストールしてください。",
+    "asr_not_ready": "ASR バックエンドが準備できていません。設定 → エンジンで WhisperX / faster-whisper / MLX Whisper をインストールするか、起動前に OMNIVOICE_PRELOAD_TTS_ASR=1 を設定して PyTorch フォールバックを有効にしてください。",
+    "asr_init_failed": "ASR バックエンドの初期化に失敗しました: {{detail}}",
+    "no_audio_for_transcription": "文字起こし用の音声がありません。先に動画を取り込み、準備（Demucs 等）が完了するまでお待ちください。",
+    "job_not_found": "ジョブが見つかりません。クリーンアップされたか、まだ作成されていません。",
+    "audio_load_failed": "音声ファイルの読み込みに失敗しました: {{detail}}",
+    "audio_load_failed_short": "音声の読み込みに失敗しました",
+    "upload_failed": "アップロードに失敗しました: {{message}}",
+    "url_ingest_failed": "URL 取り込みに失敗しました: {{message}}",
+    "transcription_failed": "文字起こしに失敗しました: {{message}}",
+    "translation_failed": "翻訳に失敗しました: {{message}}",
+    "srt_import_failed": "SRT のインポートに失敗しました",
+    "export_failed": "エクスポートに失敗しました: {{message}}",
+    "save_failed": "保存に失敗しました: {{message}}",
+    "save_error": "保存エラー: {{message}}",
+    "download_failed": "ダウンロードに失敗しました",
+    "download_error": "ダウンロードエラー: {{message}}",
+    "open_folder_failed": "フォルダを開けませんでした: {{message}}",
+    "flush_failed": "メモリ解放に失敗しました: {{message}}",
+    "cleanup_failed": "整理に失敗しました: {{message}}",
+    "install_failed": "インストールに失敗しました: {{message}}",
+    "load_engines_failed": "エンジン一覧の取得に失敗しました: {{message}}",
+    "load_logs_failed": "ログの読み込みに失敗しました: {{message}}",
+    "clear_tauri_logs_failed": "Tauri ログのクリアに失敗しました: {{message}}",
+    "clear_logs_failed": "ログのクリアに失敗しました",
+    "copy_failed": "コピーに失敗しました: {{message}}",
+    "update_check_failed": "更新確認に失敗しました: {{message}}",
+    "load_shortcut_failed": "ショートカットの読み込みに失敗しました: {{message}}",
+    "register_shortcut_failed": "ショートカットの登録に失敗しました: {{message}}",
+    "reset_shortcut_failed": "リセットに失敗しました: {{message}}",
+    "clear_failed": "クリアに失敗しました: {{message}}",
+    "add_failed": "追加に失敗しました: {{message}}",
+    "update_failed": "更新に失敗しました: {{message}}",
+    "delete_failed": "削除に失敗しました: {{message}}",
+    "auto_extract_failed": "自動抽出に失敗しました: {{message}}",
+    "load_glossary_failed": "用語集の読み込みに失敗しました: {{message}}",
+    "preview_failed": "プレビューに失敗しました: {{message}}",
+    "play_failed": "再生に失敗しました: {{message}}",
+    "playback_failed_colon": "再生に失敗しました: {{message}}",
+    "save_voice_profile_failed": "声プロファイルの保存に失敗しました",
+    "lock_profile_failed": "プロファイルのロックに失敗しました",
+    "unlock_profile_failed": "プロファイルのロック解除に失敗しました",
+    "load_voice_failed": "声の読み込みに失敗しました",
+    "save_token_failed": "トークンの保存に失敗しました",
+    "switch_engine_failed": "エンジンの切り替えに失敗しました",
+    "stop_failed": "停止に失敗しました",
+    "metadata_failed": "メタデータの取得に失敗しました",
+    "decode_failed": "デコードに失敗しました: {{message}}",
+    "prep_stream_closed": "準備ストリームが予期せず切断されました",
+    "prep_stage_failed": "準備エラー（{{stage}}）: {{error}}",
+    "generation_stream_incomplete": "生成ストリームが完了前に終了しました",
+    "seg_generate_failed": "セグメント生成エラー: {{detail}}",
+    "pip_install_failed": "pip インストールに失敗しました: {{message}}",
+    "ffmpeg_failed": "ffmpeg エラー: {{message}}",
+    "ffprobe_failed": "ffprobe エラー: {{message}}",
+    "youtube_search_failed": "YouTube 検索に失敗しました: {{message}}",
+    "youtube_download_failed": "YouTube ダウンロードに失敗しました: {{message}}"
   },
   "donate": {
     "title": "サポート",

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../store';
+import { localizeApiError } from '../i18n/localizeApi';
 import './FloatingPill.css';
 
 /**
@@ -35,6 +37,7 @@ const STAGE_LABELS = {
 };
 
 export default function FloatingPill() {
+  const { t } = useTranslation();
   const visible    = useAppStore(s => s.visible);
   const stage      = useAppStore(s => s.stage);
   const label      = useAppStore(s => s.label);
@@ -75,6 +78,8 @@ export default function FloatingPill() {
   const isDone = stage === 'done';
   const isError = stage === 'error';
   const isActive = !isDone && !isError && stage !== 'idle';
+  const displayLabel = isError && label === 'Error' ? t('common.error_title') : label;
+  const displayError = error ? localizeApiError(error, t) : null;
 
   return (
     <div
@@ -93,7 +98,7 @@ export default function FloatingPill() {
       {/* Content */}
       <div className="floating-pill__content">
         <span className="floating-pill__label">
-          {stageEmoji} {label}
+          {stageEmoji} {displayLabel}
         </span>
 
         {/* Meta row: timer + progress text */}
@@ -104,8 +109,8 @@ export default function FloatingPill() {
           {progress !== null && isActive && (
             <span>{Math.round(progress)}%</span>
           )}
-          {isError && error && (
-            <span className="floating-pill__error" title={error}>{error}</span>
+          {isError && displayError && (
+            <span className="floating-pill__error" title={displayError}>{displayError}</span>
           )}
         </div>
 

@@ -6,6 +6,7 @@ import { playBlobAudio } from '../utils/media';
 import { PRESETS } from '../utils/constants';
 import { askConfirm } from '../utils/dialog';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 
 /**
  * Encapsulates voice-profile CRUD, lock/unlock, preview, and save-from-history.
@@ -35,7 +36,7 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
   // loadProfiles is provided by useAppData (single source of truth)
 
   const handleSaveProfile = useCallback(async (refAudio, refText, instruct, language) => {
-    if (!profileName.trim() || !refAudio) return toast.error("Need a name and reference audio");
+    if (!profileName.trim() || !refAudio) return toastErr("Need a name and reference audio");
     const formData = new FormData();
     formData.append("name", profileName);
     const arrBuf = await refAudio.arrayBuffer();
@@ -49,7 +50,7 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
       setShowSaveProfile(false);
       setProfileName('');
       await loadProfiles();
-    } catch (e) { toast.error(e.message); }
+    } catch (e) { toastErr(e.message); }
   }, [profileName, loadProfiles]);
 
   const handleDeleteProfile = useCallback(async (id) => {
@@ -93,11 +94,11 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
       formData.append("num_step", steps || 16);
       const res = await generateSpeech(formData);
       const blob = await res.blob();
-      toast.success('Preview ready!', { id: toastId });
-      playBlobAudio(blob).catch(() => toast.error('Playback failed', { id: toastId }));
+      toastOk('Preview ready!', { id: toastId });
+      playBlobAudio(blob).catch(() => toastErr('Playback failed', { id: toastId }));
       await loadHistory();
     } catch (err) {
-      toast.error('Preview failed: ' + err.message, { id: toastId });
+      toastErr('Preview failed: ' + err.message, { id: toastId });
     } finally {
       setPreviewLoading(null);
     }
@@ -137,10 +138,10 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
 
       const res = await generateSpeech(formData);
       const blob = await res.blob();
-      toast.success('Preview ready!', { id: toastId });
-      playBlobAudio(blob).catch(() => toast.error('Playback failed', { id: toastId }));
+      toastOk('Preview ready!', { id: toastId });
+      playBlobAudio(blob).catch(() => toastErr('Playback failed', { id: toastId }));
     } catch (err) {
-      toast.error('Preview failed: ' + err.message, { id: toastId });
+      toastErr('Preview failed: ' + err.message, { id: toastId });
     } finally {
       setSegmentPreviewLoading(null);
     }
@@ -166,10 +167,10 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
       }
 
       await createProfile(formData);
-      toast.success("Voice saved to profiles!");
+      toastOk("Voice saved to profiles!");
       await loadProfiles();
     } catch (e) {
-      toast.error(e.message || "Failed to save voice profile");
+      toastErr(e.message || "Failed to save voice profile");
     }
   }, [loadProfiles]);
 
@@ -179,20 +180,20 @@ export default function useProfiles({ loadHistory, loadProfiles }) {
       formData.append("history_id", historyId);
       if (seed !== null && seed !== undefined) formData.append("seed", seed);
       await lockProfile(profileId, formData);
-      toast.success("🔒 Voice locked! Identity is now consistent across all generations.");
+      toastOk("🔒 Voice locked! Identity is now consistent across all generations.");
       await loadProfiles();
     } catch (e) {
-      toast.error(e.message || "Failed to lock profile");
+      toastErr(e.message || "Failed to lock profile");
     }
   }, [loadProfiles]);
 
   const handleUnlockProfile = useCallback(async (profileId) => {
     try {
       await unlockProfile(profileId);
-      toast.success("🎨 Voice unlocked. Generations will vary again.");
+      toastOk("🎨 Voice unlocked. Generations will vary again.");
       await loadProfiles();
     } catch (e) {
-      toast.error(e.message || "Failed to unlock profile");
+      toastErr(e.message || "Failed to unlock profile");
     }
   }, [loadProfiles]);
 

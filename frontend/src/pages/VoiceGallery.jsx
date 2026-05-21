@@ -12,6 +12,7 @@ import { useGalleryCategories, useGalleryVoices } from '../api/hooks';
 import AudioTrimmer from '../components/AudioTrimmer';
 import './VoiceGallery.css';
 import { askConfirm } from '../utils/dialog';
+import { toastErr, toastOk } from '../i18n/notify';
 
 // Check if running in Tauri
 import { isTauri } from '../utils/media';
@@ -82,7 +83,7 @@ export default function VoiceGallery() {
       setSearchResults([]);
     } catch (e) {
       console.error('Download failed:', e);
-      alert('Download failed: ' + e.message);
+      toastErr(t('voice_gallery.download_failed', { message: e.message }));
     } finally {
       setIsDownloading(false);
     }
@@ -163,9 +164,9 @@ export default function VoiceGallery() {
     if (!name) return;
     try {
       await saveVoiceAsProfile(voice.id, name);
-      alert('Voice saved as profile!');
+      toastOk(t('voice_gallery.saved_profile'));
     } catch (e) {
-      alert('Failed to save profile');
+      toastErr(t('voice_gallery.save_profile_failed'));
     }
   };
 
@@ -188,7 +189,7 @@ export default function VoiceGallery() {
       const file = new File([blob], `${voice.name}.wav`, { type: 'audio/wav' });
       setTrimmingVoice({ voice, file });
     } catch (e) {
-      alert("Failed to load audio for trimming: " + e.message);
+      toastErr(t('voice_gallery.trim_load_failed', { message: e.message }));
     }
   };
 
@@ -208,7 +209,7 @@ export default function VoiceGallery() {
       loadVoices();
       setTrimmingVoice(null);
     } catch (e) {
-      alert("Failed to upload cropped voice: " + e.message);
+      toastErr(t('voice_gallery.trim_upload_failed', { message: e.message }));
     }
   };
 

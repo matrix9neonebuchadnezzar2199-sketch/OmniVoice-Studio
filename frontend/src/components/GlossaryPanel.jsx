@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, BookOpen, Sparkles, Check, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { Panel, Button, Input, Badge } from '../ui';
 import {
   listGlossary, addGlossaryTerm, updateGlossaryTerm,
@@ -41,7 +42,7 @@ export default function GlossaryPanel({
       setTerms(rows);
       pushChange(rows);
     } catch (e) {
-      toast.error(`Failed to load glossary: ${e.message}`);
+      toastErr(`Failed to load glossary: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -50,14 +51,14 @@ export default function GlossaryPanel({
   useEffect(() => { reload(); }, [reload]);
 
   const onAdd = async () => {
-    if (!projectId) { toast.error('Glossary needs a loaded project.'); return; }
+    if (!projectId) { toastErr('Glossary needs a loaded project.'); return; }
     if (!draft.source.trim() || !draft.target.trim()) return;
     try {
       const row = await addGlossaryTerm(projectId, draft);
       const next = [...terms, row];
       setTerms(next); pushChange(next);
       setDraft({ source: '', target: '', note: '' });
-    } catch (e) { toast.error(`Add failed: ${e.message}`); }
+    } catch (e) { toastErr(`Add failed: ${e.message}`); }
   };
 
   const onUpdate = async (id, patch) => {
@@ -65,7 +66,7 @@ export default function GlossaryPanel({
       const row = await updateGlossaryTerm(projectId, id, patch);
       const next = terms.map(t => t.id === id ? row : t);
       setTerms(next); pushChange(next);
-    } catch (e) { toast.error(`Update failed: ${e.message}`); }
+    } catch (e) { toastErr(`Update failed: ${e.message}`); }
   };
 
   const onDelete = async (id) => {
@@ -73,7 +74,7 @@ export default function GlossaryPanel({
       await deleteGlossaryTerm(projectId, id);
       const next = terms.filter(t => t.id !== id);
       setTerms(next); pushChange(next);
-    } catch (e) { toast.error(`Delete failed: ${e.message}`); }
+    } catch (e) { toastErr(`Delete failed: ${e.message}`); }
   };
 
   const onClearAuto = async () => {
@@ -81,12 +82,12 @@ export default function GlossaryPanel({
     try {
       await clearGlossary(projectId, true);
       await reload();
-    } catch (e) { toast.error(`Clear failed: ${e.message}`); }
+    } catch (e) { toastErr(`Clear failed: ${e.message}`); }
   };
 
   const onAutoExtract = async () => {
-    if (!targetLang) { toast.error('Pick a target language first.'); return; }
-    if (!segments.length) { toast.error('No segments to scan.'); return; }
+    if (!targetLang) { toastErr('Pick a target language first.'); return; }
+    if (!segments.length) { toastErr('No segments to scan.'); return; }
     setExtracting(true);
     try {
       const res = await autoExtractGlossary(projectId, {
@@ -97,10 +98,10 @@ export default function GlossaryPanel({
       if (res.inserted === 0) {
         toast('Auto-extract found no new terms.', { icon: 'ℹ️' });
       } else {
-        toast.success(`Added ${res.inserted} auto term${res.inserted === 1 ? '' : 's'}. Review and edit before translating.`);
+        toastOk(`Added ${res.inserted} auto term${res.inserted === 1 ? '' : 's'}. Review and edit before translating.`);
       }
     } catch (e) {
-      toast.error(`Auto-extract failed: ${e.message}`);
+      toastErr(`Auto-extract failed: ${e.message}`);
     } finally {
       setExtracting(false);
     }

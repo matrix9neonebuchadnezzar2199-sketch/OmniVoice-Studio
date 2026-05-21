@@ -7,6 +7,7 @@ import {
   decodeToMonoLowRate, DEFAULT_PEAK_BUCKETS,
 } from '../utils/audioTrim.js';
 import { Dialog, Button } from '../ui';
+import { errMsg } from '../i18n/notify';
 import './AudioTrimmer.css';
 
 const EDGE_GRAB_PX = 10;
@@ -99,7 +100,7 @@ export default function AudioTrimmer({ file, maxSeconds = 15, onConfirm, onCance
         peaksRef.current = refined;
         setPeakProgress(1);
       } catch (e) {
-        if (!cancelled) setError('Decode failed: ' + (e.message || e));
+        if (!cancelled) setError(errMsg('Decode failed: ' + (e.message || e)));
         setDecoding(false);
       }
     })();
@@ -465,7 +466,7 @@ export default function AudioTrimmer({ file, maxSeconds = 15, onConfirm, onCance
     const doPlay = () => {
       try { a.currentTime = s; } catch (err) { console.warn('currentTime set failed', err); }
       a.play().then(() => setPlaying(true)).catch((err) => {
-        setError('Playback failed: ' + (err.message || err));
+        setError(errMsg('Playback failed: ' + (err.message || err)));
       });
     };
     // HAVE_METADATA = 1 is enough to set currentTime on most browsers.
@@ -473,7 +474,7 @@ export default function AudioTrimmer({ file, maxSeconds = 15, onConfirm, onCance
       doPlay();
     } else {
       a.addEventListener('loadedmetadata', doPlay, { once: true });
-      a.addEventListener('error', () => setError('Audio load failed'), { once: true });
+      a.addEventListener('error', () => setError(errMsg('Audio load failed')), { once: true });
     }
   };
 

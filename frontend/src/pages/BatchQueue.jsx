@@ -11,6 +11,7 @@ import {
 import { API } from '../api/client';
 import BatchAddDialog from '../components/BatchAddDialog';
 import toast from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import './BatchQueue.css';
 
 /**
@@ -78,11 +79,11 @@ export default function BatchQueue({ onBack }) {
         await enqueueBatchJob(file, langCodes, settings.voiceId || undefined, settings.preserveBg);
         success++;
       } catch (e) {
-        toast.error(t('batch.enqueue_failed', { name: file.name, message: e.message }));
+        toastErr(t('batch.enqueue_failed', { name: file.name, message: errMsg(e.message) }));
       }
     }
     if (success > 0) {
-      toast.success(t('batch.enqueued', { count: success }));
+      toastOk(t('batch.enqueued', { count: success }));
       setTab('active');
       reload();
     }
@@ -91,20 +92,20 @@ export default function BatchQueue({ onBack }) {
   const handleCancel = useCallback(async (id) => {
     try {
       await cancelBatchJob(id);
-      toast.success(t('batch.job_cancelled'));
+      toastOk(t('batch.job_cancelled'));
       reload();
     } catch (e) {
-      toast.error(t('batch.cancel_failed', { message: e.message }));
+      toastErr(t('batch.cancel_failed', { message: errMsg(e.message) }));
     }
   }, [t, reload]);
 
   const handleDelete = useCallback(async (id) => {
     try {
       await deleteBatchJob(id);
-      toast.success(t('batch.job_deleted'));
+      toastOk(t('batch.job_deleted'));
       reload();
     } catch (e) {
-      toast.error(t('batch.delete_failed', { message: e.message }));
+      toastErr(t('batch.delete_failed', { message: errMsg(e.message) }));
     }
   }, [t, reload]);
 

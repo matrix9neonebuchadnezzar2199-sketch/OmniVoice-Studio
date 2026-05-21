@@ -5,6 +5,7 @@ import { playBlobAudio, playPing } from '../utils/media';
 import { probeAudioDuration } from '../utils/format';
 import { CLONE_MAX_SECONDS, PRESETS } from '../utils/constants';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 
 /**
  * Encapsulates TTS generation logic, streaming response handling,
@@ -64,8 +65,8 @@ export default function useTTS({ selectedProfile, setSelectedProfile, loadHistor
   }, [text, insertTag]);
 
   const handleGenerate = useCallback(async () => {
-    if (!text.trim()) return toast.error("Please enter text");
-    if (mode === 'clone' && !refAudio && !selectedProfile) return toast.error("Upload an audio or select a voice profile");
+    if (!text.trim()) return toastErr("Please enter text");
+    if (mode === 'clone' && !refAudio && !selectedProfile) return toastErr("Upload an audio or select a voice profile");
     setIsGenerating(true);
     setGenerationTime(0);
     const st = Date.now();
@@ -137,7 +138,7 @@ export default function useTTS({ selectedProfile, setSelectedProfile, loadHistor
       setSidebarTab('history');
       playPing();
     } catch (err) {
-      toast.error("Error: " + err.message);
+      toastErr("Error: " + err.message);
     } finally {
       clearInterval(timerRef.current);
       setIsGenerating(false);

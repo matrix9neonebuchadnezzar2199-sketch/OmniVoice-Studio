@@ -5,6 +5,7 @@
  */
 import { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { cleanAudio as apiCleanAudio } from '../api/system';
 
 export default function useRecording(ingestRefAudio) {
@@ -33,7 +34,7 @@ export default function useRecording(ingestRefAudio) {
 
         const blob = new Blob(recordingChunksRef.current, { type: 'audio/webm' });
         if (blob.size < 1000) {
-          toast.error("Recording too short");
+          toastErr("Recording too short");
           return;
         }
 
@@ -49,12 +50,12 @@ export default function useRecording(ingestRefAudio) {
           const cleanFile = new File([cleanBlob], cleanFilename, { type: "audio/wav" });
 
           await ingestRefAudio(cleanFile);
-          toast.success("🎙️ Recording cleaned & loaded!");
+          toastOk("🎙️ Recording cleaned & loaded!");
         } catch (e) {
           // Fallback: use raw recording without denoising
           const rawFile = new File([blob], "recording.webm", { type: "audio/webm" });
           await ingestRefAudio(rawFile);
-          toast.success("Recording loaded (raw — denoising unavailable)");
+          toastOk("Recording loaded (raw — denoising unavailable)");
         } finally {
           setIsCleaning(false);
         }
@@ -70,7 +71,7 @@ export default function useRecording(ingestRefAudio) {
       }, 100);
 
     } catch (e) {
-      toast.error("Microphone access denied");
+      toastErr("Microphone access denied");
     }
   };
 

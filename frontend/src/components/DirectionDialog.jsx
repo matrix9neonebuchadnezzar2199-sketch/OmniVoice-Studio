@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { Dialog, Button, Textarea, Field, Badge } from '../ui';
 import { apiPost } from '../api/client';
 import './Misc.css';
@@ -35,7 +36,7 @@ export default function DirectionDialog({ open, seg, onSave, onClose }) {
     try {
       setPreview(await apiPost('/tools/direction', { text }));
     } catch (e) {
-      toast.error(`Preview failed: ${e.message}`);
+      toastErr(`Preview failed: ${e.message}`);
     } finally {
       setParsing(false);
     }

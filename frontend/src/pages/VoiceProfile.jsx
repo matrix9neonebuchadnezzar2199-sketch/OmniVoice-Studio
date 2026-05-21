@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import {
   ArrowLeft, Fingerprint, Wand2, Lock, Unlock, Trash2, Play, Save,
   FolderOpen, Volume2, Clock, Pencil, Check, X, Sparkles,
@@ -55,7 +56,7 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
         ref_text: p.ref_text || '',
       });
     } catch (e) {
-      toast.error(e.message || 'Failed to load voice');
+      toastErr(e.message || 'Failed to load voice');
       setProfile(null);
     } finally {
       setLoading(false);
@@ -71,7 +72,7 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
 
   const saveEdits = async () => {
     if (!draft.name.trim()) {
-      toast.error(t('voice_profile.needs_name'));
+      toastErr(t('voice_profile.needs_name'));
       return;
     }
     setSaving(true);
@@ -79,9 +80,9 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
       const next = await updateProfile(voiceId, draft);
       setProfile(next);
       setEditing(false);
-      toast.success(t('voice_profile.saved'));
+      toastOk(t('voice_profile.saved'));
     } catch (e) {
-      toast.error(t('voice_profile.save_failed', { message: e.message }));
+      toastErr(t('voice_profile.save_failed', { message: errMsg(e.message) }));
     } finally {
       setSaving(false);
     }
@@ -101,10 +102,10 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
     if (!(await askConfirm(t('voice_profile.delete_confirm', { name: profile.name })))) return;
     try {
       await deleteProfile(voiceId);
-      toast.success(t('voice_profile.deleted'));
+      toastOk(t('voice_profile.deleted'));
       onDeleted?.();
     } catch (e) {
-      toast.error(t('voice_profile.delete_failed', { message: e.message }));
+      toastErr(t('voice_profile.delete_failed', { message: errMsg(e.message) }));
     }
   };
 
@@ -113,9 +114,9 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
     try {
       await unlockProfile(voiceId);
       await reload();
-      toast.success(t('voice_profile.unlocked'));
+      toastOk(t('voice_profile.unlocked'));
     } catch (e) {
-      toast.error(t('voice_profile.unlock_failed', { message: e.message }));
+      toastErr(t('voice_profile.unlock_failed', { message: errMsg(e.message) }));
     }
   };
 
@@ -139,7 +140,7 @@ export default function VoiceProfile({ voiceId, onBack, onOpenProject, onDeleted
       setTestAudioUrl(url);
       setTimeout(() => testAudioRef.current?.play?.(), 80);
     } catch (e) {
-      toast.error(t('voice_profile.gen_failed', { message: e.message }));
+      toastErr(t('voice_profile.gen_failed', { message: errMsg(e.message) }));
     } finally {
       setTestGenerating(false);
     }

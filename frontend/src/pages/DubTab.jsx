@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { localizeApiError } from '../i18n/localizeApi';
 import {
   PanelLeftOpen, PanelLeftClose, Film, Save, UploadCloud, Sparkles, Loader, Square,
   FileText, Play, DownloadIcon, Volume2, Link2,
@@ -18,6 +19,7 @@ import { formatTime } from '../utils/format';
 import { API } from '../api/client';
 import { listTranslationEngines, installTranslationEngine } from '../api/engines';
 import toast from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { Button, Segmented, Badge, Progress } from '../ui';
 import GlossaryPanel from '../components/GlossaryPanel';
 import ExportModal from '../components/ExportModal';
@@ -148,10 +150,10 @@ export default function DubTab(props) {
       } else if (res.status === 'already_installed') {
         toast(t('dub.install_already', { engine: engineId }), { icon: 'ℹ️', id: progressToast });
       } else {
-        toast.success(t('dub.install_ok', { engine: engineId }), { id: progressToast });
+        toastOk(t('dub.install_ok', { engine: engineId }), { id: progressToast });
       }
     } catch (err) {
-      toast.error(t('dub.install_failed', { message: String(err.message || err).slice(0, 200) }), { id: progressToast, duration: 8000 });
+      toastErr(t('dub.install_failed', { message: String(errMsg(err.message || err)).slice(0, 200) }), { id: progressToast, duration: 8000 });
     } finally {
       setEngineInstalling(null);
     }
@@ -249,7 +251,7 @@ export default function DubTab(props) {
           {dubError && dubJobId && dubStep === 'idle' && (
             <div className="dub-footer-banner">
               <Badge tone="danger">
-                <AlertCircle size={11} /> {dubError}
+                <AlertCircle size={11} /> {localizeApiError(dubError, t)}
               </Badge>
               {handleDubRetryTranscribe && (
                 <Button
@@ -933,7 +935,7 @@ export default function DubTab(props) {
             {dubError && (
               <div className="dub-footer-banner">
                 <Badge tone="danger">
-                  <AlertCircle size={11} /> {dubError}
+                  <AlertCircle size={11} /> {localizeApiError(dubError, t)}
                 </Badge>
               </div>
             )}

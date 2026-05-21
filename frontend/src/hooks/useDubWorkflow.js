@@ -9,7 +9,7 @@ import { PRESETS } from '../utils/constants';
 import { apiPost } from '../api/client';
 import { API } from '../api/client';
 import { playPing, isTauri } from '../utils/media';
-import { toast } from 'react-hot-toast';
+import { errMsg, toastErr, toastOk, toastInfo } from '../i18n/notify';
 
 /**
  * Encapsulates the entire dub pipeline workflow:
@@ -100,17 +100,22 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       try {
         const m = JSON.parse(e.data);
         if (m && m.detail) {
-          toast(m.detail, { icon: '⚠️', duration: 8000 });
+          toastInfo(errMsg(m.detail), { icon: '⚠️', duration: 8000 });
         }
       } catch { /* malformed warning event */ }
     });
     evt.addEventListener('done', () => { close(); ctrl.signal.removeEventListener('abort', onAbortSignal); resolve(); });
     evt.addEventListener('aborted', () => { close(); ctrl.signal.removeEventListener('abort', onAbortSignal); reject(Object.assign(new Error('aborted'), { name: 'AbortError' })); });
     evt.addEventListener('error', (e) => {
-      try { const m = e.data ? JSON.parse(e.data) : null; if (m && m.detail) { close(); reject(new Error(m.detail)); return; } } catch {}
+      try {
+        const m = e.data ? JSON.parse(e.data) : null;
+        if (m && m.detail) { close(); reject(new Error(errMsg(m.detail))); return; }
+      } catch { /* malformed error event */ }
       if (gotFinal) { close(); resolve(); return; }
       close();
-      reject(new Error('Transcribe stream dropped before emitting any segments. Likely ASR backend failed to load — check backend log + Settings → Models.'));
+      reject(new Error(errMsg(
+        'Transcribe stream dropped before emitting any segments. Likely ASR backend failed to load — check backend log + Settings → Models.',
+      )));
     });
   }), [setDubSegments, setDubTranscript, setSpeakerClones]);
 
@@ -180,8 +185,14 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       loadProjects(); loadProfiles();
     } catch (err) {
       setDubPrepStage(null);
-      if (err.name === 'AbortError') { toast('Upload cancelled'); setDubStep('idle'); useAppStore.getState().dismissPill(); }
-      else { setDubError(err.message); setDubStep('idle'); toast.error('Upload failed: ' + err.message); useAppStore.getState().errorPill(err.message); }
+      if (err.name === 'AbortError') { toastInfo('Upload cancelled'); setDubStep('idle'); useAppStore.getState().dismissPill(); }
+      else {
+        const msg = errMsg(err.message);
+        setDubError(msg);
+        setDubStep('idle');
+        toastErr(`Upload failed: ${msg}`);
+        useAppStore.getState().errorPill(msg);
+      }
       setTranscribeStart(null);
     } finally { dubAbortCtrlRef.current = null; }
   }, [setDubStep, setDubError, setDubTracks, setDubPrepStage, setDubJobId, setDubFilename, setDubTaskId, setDubSegments, _waitForPrep, _waitForTranscribe, loadProjects, loadProfiles]);
@@ -208,11 +219,17 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       setTranscribeStart(null); setDubStep('editing');
       useAppStore.getState().completePill('Transcription complete');
       loadProjects(); loadProfiles();
-      toast.success('Ingested ' + clean.slice(0, 60));
+      toastOk('Ingested ' + clean.slice(0, 60));
     } catch (err) {
       setDubPrepStage(null);
-      if (err.name === 'AbortError') { toast('Ingest cancelled'); setDubStep('idle'); useAppStore.getState().dismissPill(); }
-      else { setDubError(err.message); setDubStep('idle'); toast.error('URL ingest failed: ' + err.message); useAppStore.getState().errorPill(err.message); }
+      if (err.name === 'AbortError') { toastInfo('Ingest cancelled'); setDubStep('idle'); useAppStore.getState().dismissPill(); }
+      else {
+        const msg = errMsg(err.message);
+        setDubError(msg);
+        setDubStep('idle');
+        toastErr(`URL ingest failed: ${msg}`);
+        useAppStore.getState().errorPill(msg);
+      }
       setTranscribeStart(null);
     } finally { dubAbortCtrlRef.current = null; }
   }, [setDubStep, setDubError, setDubTracks, setDubPrepStage, setDubJobId, setDubTaskId, setDubSegments, _waitForPrep, _waitForTranscribe, loadProjects, loadProfiles]);
@@ -234,14 +251,19 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       setTranscribeStart(null); setDubStep('editing'); loadProjects();
     } catch (err) {
       setTranscribeStart(null);
-      if (err.name === 'AbortError') { toast('Retry cancelled'); setDubStep('idle'); }
-      else { setDubError(err.message); setDubStep('idle'); toast.error('Transcription failed: ' + err.message); }
+      if (err.name === 'AbortError') { toastInfo('Retry cancelled'); setDubStep('idle'); }
+      else {
+        const msg = errMsg(err.message);
+        setDubError(msg);
+        setDubStep('idle');
+        toastErr(`Transcription failed: ${msg}`);
+      }
     } finally { dubAbortCtrlRef.current = null; }
   }, [dubJobId, setDubError, setDubSegments, setDubStep, _waitForTranscribe, loadProjects]);
 
   const handleDubImportSrt = useCallback(async (file) => {
     if (!dubJobId) {
-      toast.error('Upload or ingest a video first — there is no job to attach subtitles to.');
+      toastErr('Upload or ingest a video first — there is no job to attach subtitles to.');
       return;
     }
     if (!file) return;
@@ -259,12 +281,12 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       if (stats.skipped_malformed) noteParts.push(`${stats.skipped_malformed} skipped (malformed)`);
       if (stats.dropped_overlap) noteParts.push(`${stats.dropped_overlap} dropped (overlap)`);
       if (stats.clamped_to_duration) noteParts.push(`${stats.clamped_to_duration} clamped to media length`);
-      toast.success(noteParts.join(' · '), { duration: 6000 });
+      toastOk(noteParts.join(' · '), { duration: 6000 });
       loadProjects();
     } catch (err) {
-      const msg = err?.message || 'SRT import failed';
+      const msg = errMsg(err?.message || 'SRT import failed');
       setDubError(msg);
-      toast.error(msg);
+      toastErr(msg);
     }
   }, [dubJobId, setDubError, setDubSegments, setDubStep, loadProjects]);
 
@@ -275,8 +297,8 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       const data = await dubCleanupSegments(dubJobId);
       setDubSegments(data.segments || []);
       const delta = before - (data.after ?? data.segments.length);
-      toast.success(delta > 0 ? `Cleaned ${delta} fragment${delta === 1 ? '' : 's'}` : 'Segments already clean');
-    } catch (err) { toast.error('Clean up failed: ' + err.message); }
+      toastOk(delta > 0 ? `Cleaned ${delta} fragment${delta === 1 ? '' : 's'}` : 'Segments already clean');
+    } catch (err) { toastErr('Clean up failed: ' + err.message); }
   }, [dubJobId, dubSegments, setDubSegments]);
 
   const handleTranslateAll = useCallback(async () => {
@@ -307,16 +329,16 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
         return { ...s, text: (hit.text && hit.text.trim()) ? hit.text : s.text, translate_error: hit.error || undefined, translate_literal: hit.literal || undefined, translate_critique: hit.critique || undefined };
       }));
       if (data.cinematic_skipped === 'no-llm-configured') {
-        toast('Cinematic quality needs an LLM — set TRANSLATE_BASE_URL + TRANSLATE_API_KEY (Ollama works locally). Falling back to Fast.', { icon: 'ℹ️', duration: 7000 });
+        toastInfo('Cinematic quality needs an LLM — set TRANSLATE_BASE_URL + TRANSLATE_API_KEY (Ollama works locally). Falling back to Fast.', { icon: 'ℹ️', duration: 7000 });
       }
       if (errors.length) {
         const unique = [...new Set(errors.map(e => e.error))];
-        toast.error(`${errors.length}/${data.translated.length} segment${errors.length === 1 ? '' : 's'} failed: ${unique[0].slice(0, 120)}`, { duration: 6000 });
+        toastErr(`${errors.length}/${data.translated.length} segment${errors.length === 1 ? '' : 's'} failed: ${unique[0].slice(0, 120)}`, { duration: 6000 });
       } else {
         const qLabel = data.quality_used === 'cinematic' ? ' (Cinematic)' : '';
-        toast.success(`Translated ${data.translated.length} segment${data.translated.length === 1 ? '' : 's'} → ${data.target_lang}${qLabel}`);
+        toastOk(`Translated ${data.translated.length} segment${data.translated.length === 1 ? '' : 's'} → ${data.target_lang}${qLabel}`);
       }
-    } catch (err) { setDubError('Translation failed: ' + err.message); }
+    } catch (err) { setDubError(errMsg('Translation failed: ' + err.message)); }
     setIsTranslating(false);
   }, [dubSegments, dubLangCode, translateProvider, translateQuality, glossaryTerms, setIsTranslating, setDubSegments, setDubError]);
 
@@ -384,8 +406,8 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
                   try { const plan = await apiPost('/tools/incremental', { segments: dubSegments.map(s => ({ id: String(s.id), text: s.text, target_lang: s.target_lang, profile_id: s.profile_id, instruct: s.instruct, speed: s.speed, direction: s.direction })) }); setLastGenFingerprints(plan.fingerprints || {}); } catch (err) { console.warn('Incremental plan fallback failed:', err); }
                 }
               } else if (evt.type === 'cancelled') {
-                wasCancelled = true; setDubStep('editing'); setDubError('Generation aborted.'); toast('Dubbing aborted', { icon: '⏹' });
-              } else if (evt.type === 'error') setDubError(p => p + `\nSeg ${evt.segment}: ${evt.error}`);
+                wasCancelled = true; setDubStep('editing'); setDubError(errMsg('Generation aborted.')); toastInfo('Dubbing aborted', { icon: '⏹' });
+              } else if (evt.type === 'error') setDubError(p => (p ? p + '\n' : '') + errMsg(`Seg ${evt.segment}: ${evt.error}`));
             } catch (err) { console.warn('Dub generate SSE handler failed:', err); }
           }
         }
@@ -398,8 +420,9 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
         useAppStore.getState().completePill('Dub complete');
       } else { useAppStore.getState().dismissPill(); }
     } catch (err) {
-      setDubError(err.message); setDubStep('editing'); setDubTaskId(null);
-      useAppStore.getState().errorPill(err.message);
+      const msg = errMsg(err.message);
+      setDubError(msg); setDubStep('editing'); setDubTaskId(null);
+      useAppStore.getState().errorPill(msg);
     }
   }, [dubJobId, dubSegments, dubLang, dubLangCode, dubInstruct, steps, cfg, speed, dubStep, setDubStep, setDubProgress, setDubError, setDubTracks, setDubSegments, setDubTaskId, setPreviewSegIds, setLastGenFingerprints, loadDubHistory, loadProjects]);
 
@@ -411,7 +434,7 @@ export default function useDubWorkflow({ loadProjects, loadProfiles, loadDubHist
       await tasksCancel(dubTaskId);
     } catch (e) {
       setDubStep(prevStep);
-      toast.error('Failed to stop');
+      toastErr('Failed to stop');
     }
   }, [dubTaskId, dubStep, setDubStep]);
 

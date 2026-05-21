@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Mic, Copy, Trash2, Search, Clock, Languages, FileText, Download } from 'lucide-react';
 import { Button } from '../ui';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import './Transcriptions.css';
 
 const STORAGE_KEY = 'omni_transcriptions';
@@ -75,8 +76,8 @@ export default function TranscriptionsPage() {
 
   const copyText = useCallback((text) => {
     navigator.clipboard.writeText(text).then(
-      () => toast.success(t('transcriptions.copied')),
-      () => toast.error(t('transcriptions.copy_failed'))
+      () => toastOk(t('transcriptions.copied')),
+      () => toastErr(t('transcriptions.copy_failed'))
     );
   }, [t]);
 
@@ -104,7 +105,7 @@ export default function TranscriptionsPage() {
     a.download = `transcriptions_${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(t('transcriptions.exported'));
+    toastOk(t('transcriptions.exported'));
   }, [transcriptions]);
 
   const formatTime = (iso) => {

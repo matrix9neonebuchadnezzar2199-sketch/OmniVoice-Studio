@@ -699,7 +699,32 @@
     "footer_downloads": "Downloads from huggingface.co",
     "open_finder": "Open in Finder",
     "open": "Open",
-    "install_required_models": "Install the required models above to continue."
+    "install_required_models": "Install the required models above to continue.",
+    "preflight": {
+      "checks": {
+        "os": { "label": "Operating system" },
+        "python": { "label": "Python runtime" },
+        "ram": { "label": "System RAM" },
+        "disk": { "label": "Disk space" },
+        "hf_cache_writable": { "label": "HuggingFace cache writable" },
+        "ffmpeg": { "label": "FFmpeg" },
+        "ffprobe": { "label": "FFprobe" },
+        "yt-dlp": { "label": "yt-dlp" },
+        "gpu": { "label": "GPU acceleration" },
+        "network": { "label": "Network (huggingface.co)" }
+      }
+    }
+  },
+  "errors": {
+    "transcribe_stream_dropped": "Transcribe stream dropped before emitting any segments. Likely ASR backend failed to load — check backend log + Settings → Models.",
+    "asr_not_ready": "No ASR backend is ready. Install WhisperX/faster-whisper/MLX Whisper or set OMNIVOICE_PRELOAD_TTS_ASR=1 before launch to use the PyTorch fallback.",
+    "asr_init_failed": "ASR backend initialization failed: {{detail}}",
+    "no_audio_for_transcription": "No audio available for transcription.",
+    "job_not_found": "Job not found. It may have been cleaned up or was never created.",
+    "audio_load_failed": "audio load failed: {{detail}}",
+    "upload_failed": "Upload failed: {{message}}",
+    "url_ingest_failed": "URL ingest failed: {{message}}",
+    "transcription_failed": "Transcription failed: {{message}}"
   },
   "donate": {
     "title": "Support",

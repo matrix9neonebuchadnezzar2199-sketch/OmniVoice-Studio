@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Loader } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { useAppStore } from '../store';
 import './CaptureWidget.css';
 
@@ -257,7 +258,7 @@ export default function CaptureWidget({ onDismiss }) {
         : isWindows
         ? 'Windows: open Settings → Privacy & security → Microphone and allow OmniVoice.'
         : 'Linux: check that your user is in the audio group and the WebView has mic access.';
-      toast.error(`Microphone access denied. ${hint}`, { duration: 6000 });
+      toastErr(`Microphone access denied. ${hint}`, { duration: 6000 });
       setTrayRecording(false);
       setState('error');
     }
@@ -319,7 +320,7 @@ export default function CaptureWidget({ onDismiss }) {
       await applyResult(data);
     } catch (err) {
       if (wsHadFinalRef.current) return;
-      toast.error(`Transcription failed: ${err.message}`);
+      toastErr(`Transcription failed: ${err.message}`);
       setState('error');
       setTranscript('');
     }

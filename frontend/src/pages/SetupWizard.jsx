@@ -7,6 +7,7 @@ import {
 import { Button } from '../ui';
 import { useSetupStatus, usePreflight } from '../api/hooks';
 import { ModelStoreTab, EnginesTab } from './Settings';
+import { localizePreflightCheck } from '../i18n/localizeApi';
 import './SetupWizard.css';
 import '../components/Misc.css';
 
@@ -64,7 +65,9 @@ function PreflightPanel({ report, loading, onRecheck }) {
           {t('setup.recheck')}
         </Button>
       </div>
-      {report.checks.map((c) => (
+      {report.checks.map((raw) => {
+        const c = localizePreflightCheck(raw, t);
+        return (
         <div key={c.id} className="setup-wizard__row swiz-check-row" style={{ alignItems: 'flex-start', padding: '8px 4px' }}>
           <span className={`swiz-check-icon swiz-check-icon--${c.status}`}>
             {CHECK_ICON[c.status] || null}
@@ -83,7 +86,8 @@ function PreflightPanel({ report, loading, onRecheck }) {
             )}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

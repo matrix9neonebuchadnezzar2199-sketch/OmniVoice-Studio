@@ -14,6 +14,7 @@ import {
   Keyboard,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { toastErr, toastOk, errMsg } from '../i18n/notify';
 import { openExternal } from '../api/external';
 import { Trans, useTranslation } from 'react-i18next';
 import { systemLogs, systemLogsTauri, clearSystemLogs, clearTauriLogs } from '../api/system';
@@ -89,7 +90,7 @@ function GeneralTab() {
     const url = llmBaseUrl.trim();
     const key = llmApiKey.trim();
     const model = llmModel.trim();
-    if (!url || !key) { toast.error('请填写 Base URL 和 API Key'); return; }
+    if (!url || !key) { toastErr(t('settings.llm_fill_url_key')); return; }
     setLlmSaving(true);
     try {
       const { API } = await import('../api/client');
@@ -103,10 +104,10 @@ function GeneralTab() {
         setEnv('TRANSLATE_API_KEY', key),
         model ? setEnv('TRANSLATE_MODEL', model) : Promise.resolve(),
       ]);
-      toast.success('LLM 配置已保存');
+      toastOk(t('settings.llm_saved'));
       setLlmSaved(true);
       queryClient.invalidateQueries({ queryKey: queryKeys.systemInfo });
-    } catch (e) { toast.error(`保存失败: ${e.message}`); }
+    } catch (e) { toastErr(t('settings.save_failed_msg', { message: errMsg(e.message) })); }
     finally { setLlmSaving(false); }
   };
 
@@ -121,14 +122,14 @@ function GeneralTab() {
         body: JSON.stringify({ key: 'FFMPEG_PATH', value }),
       });
       if (r.ok) {
-        toast.success(t('settings.ffmpeg_saved'));
+        toastOk(t('settings.ffmpeg_saved'));
         setFfmpegPath('');
         queryClient.invalidateQueries({ queryKey: queryKeys.systemInfo });
       } else {
         const d = await r.json().catch(() => ({}));
-        toast.error(d.detail || t('credentials.save_failed'));
+        toastErr(d.detail || t('credentials.save_failed'));
       }
-    } catch (e) { toast.error(`Save failed: ${e.message}`); }
+    } catch (e) { toastErr(`Save failed: ${e.message}`); }
     finally { setFfmpegSaving(false); }
   };
 
@@ -157,14 +158,14 @@ function GeneralTab() {
           setEnv('https_proxy', value),
           setEnv('all_proxy', value),
         ]);
-        toast.success(t('settings.proxy_saved'));
+        toastOk(t('settings.proxy_saved'));
         setProxySaved(true);
         queryClient.invalidateQueries({ queryKey: queryKeys.systemInfo });
       } else {
         const d = await r.json().catch(() => ({}));
-        toast.error(d.detail || t('settings.proxy_save_failed'));
+        toastErr(d.detail || t('settings.proxy_save_failed'));
       }
-    } catch (e) { toast.error(`Save failed: ${e.message}`); }
+    } catch (e) { toastErr(`Save failed: ${e.message}`); }
     finally { setProxySaving(false); }
   };
 
@@ -187,9 +188,9 @@ function GeneralTab() {
       ]);
       setProxyUrl('');
       setProxySaved(false);
-      toast.success(t('settings.proxy_cleared'));
+      toastOk(t('settings.proxy_cleared'));
       queryClient.invalidateQueries({ queryKey: queryKeys.systemInfo });
-    } catch (e) { toast.error(`Clear failed: ${e.message}`); }
+    } catch (e) { toastErr(`Clear failed: ${e.message}`); }
     finally { setProxySaving(false); }
   };
 
@@ -367,15 +368,15 @@ export function ModelStoreTab({ info, modelBadge }) {
         body: JSON.stringify({ key: 'HF_TOKEN', value }),
       });
       if (res.ok) {
-        toast.success('HuggingFace token set — faster downloads enabled');
+        toastOk('HuggingFace token set — faster downloads enabled');
         setHfSaved(true);
         setHfToken('');
         setHfExpanded(false);
       } else {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.detail || 'Failed to save token');
+        toastErr(d.detail || 'Failed to save token');
       }
-    } catch (e) { toast.error(`Save failed: ${e.message}`); }
+    } catch (e) { toastErr(`Save failed: ${e.message}`); }
     finally { setHfSaving(false); }
   };
   const hfTokenSet = hfSaved || info?.has_hf_token;
@@ -458,9 +459,9 @@ export function ModelStoreTab({ info, modelBadge }) {
     setBusy(prev => new Set(prev).add(repoId));
     try {
       await fn();
-      if (successMsg) toast.success(successMsg);
+      if (successMsg) toastOk(successMsg);
     } catch (e) {
-      toast.error(e.message || String(e));
+      toastErr(e.message || String(e));
     } finally {
       setBusy(prev => { const s = new Set(prev); s.delete(repoId); return s; });
     }
@@ -485,7 +486,7 @@ export function ModelStoreTab({ info, modelBadge }) {
     if (!reco) return;
     const missing = reco.models.filter(m => !m.installed);
     if (missing.length === 0) {
-      toast.success('Recommended models are already installed.');
+      toastOk('Recommended models are already installed.');
       return;
     }
     setInstallingReco(true);
@@ -493,9 +494,9 @@ export function ModelStoreTab({ info, modelBadge }) {
       // Parallel install — backend /models/install spawns each download on
       // its own asyncio task so ordering doesn't matter.
       await Promise.all(missing.map(m => installMutation.mutateAsync(m.repo_id)));
-      toast.success(`Started downloading ${missing.length} model${missing.length > 1 ? 's' : ''}`);
+      toastOk(`Started downloading ${missing.length} model${missing.length > 1 ? 's' : ''}`);
     } catch (e) {
-      toast.error(`Install failed: ${e.message || e}`);
+      toastErr(`Install failed: ${e.message || e}`);
     } finally {
       setInstallingReco(false);
     }
@@ -891,8 +892,8 @@ export function ModelStoreTab({ info, modelBadge }) {
                       setInstallingReco(true);
                       try {
                         await Promise.all(requiredMissing.map(m => installMutation.mutateAsync(m.repo_id)));
-                        toast.success(`Started downloading ${requiredMissing.length} required model${requiredMissing.length > 1 ? 's' : ''}`);
-                      } catch (e) { toast.error(`Install failed: ${e.message || e}`); }
+                        toastOk(`Started downloading ${requiredMissing.length} required model${requiredMissing.length > 1 ? 's' : ''}`);
+                      } catch (e) { toastErr(`Install failed: ${e.message || e}`); }
                       finally { setInstallingReco(false); }
                     }}
                     disabled={installingReco}
@@ -1035,7 +1036,7 @@ export function EnginesTab() {
   const reload = useCallback(async () => {
     setLoading(true);
     try { setData(await listEngines()); }
-    catch (e) { toast.error(`Failed to load engines: ${e.message}`); }
+    catch (e) { toastErr(`Failed to load engines: ${e.message}`); }
     finally { setLoading(false); }
   }, []);
 
@@ -1043,10 +1044,10 @@ export function EnginesTab() {
     setSwitching(`${family}:${backendId}`);
     try {
       const r = await selectEngine(family, backendId);
-      toast.success(`${family.toUpperCase()} → ${r.active}`);
+      toastOk(`${family.toUpperCase()} → ${r.active}`);
       await reload();
     } catch (e) {
-      toast.error(e.message || 'Failed to switch engine');
+      toastErr(e.message || 'Failed to switch engine');
     } finally {
       setSwitching(null);
     }
@@ -1235,9 +1236,9 @@ export default function Settings() {
     const text = lines.join('\n');
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Diagnostics copied — paste into your issue report.');
+      toastOk('Diagnostics copied — paste into your issue report.');
     } catch (e) {
-      toast.error('Copy failed: ' + (e?.message || e));
+      toastErr('Copy failed: ' + (e?.message || e));
     }
   }, [appVersion, tauriVersion, info, status, hw]);
 
@@ -1256,7 +1257,7 @@ export default function Settings() {
       const update = await check();
       if (!update) {
         setUpdateState('uptodate');
-        toast.success("You're on the latest version.");
+        toastOk("You're on the latest version.");
         return;
       }
       const proceed = await ask(
@@ -1267,11 +1268,11 @@ export default function Settings() {
       setUpdateState('downloading');
       const t = toast.loading(`Downloading ${update.version}…`);
       await update.downloadAndInstall();
-      toast.success('Installed — relaunching.', { id: t });
+      toastOk('Installed — relaunching.', { id: t });
       await relaunch();
     } catch (e) {
       setUpdateState('error');
-      toast.error('Update check failed: ' + (e?.message || e));
+      toastErr('Update check failed: ' + (e?.message || e));
     }
   }, []);
 
@@ -1299,7 +1300,7 @@ export default function Settings() {
         setLogMeta({ path: 'in-memory (last 500)', exists: true });
       }
     } catch (e) {
-      toast.error('Failed to load logs: ' + e.message);
+      toastErr('Failed to load logs: ' + e.message);
     } finally {
       setLoadingLogs(false);
     }
@@ -1313,7 +1314,7 @@ export default function Settings() {
     if (logSource === 'frontend') {
       if (!(await askConfirm('Clear the in-memory frontend log buffer?', 'Clear logs'))) return;
       clearFrontendLogs();
-      toast.success('Frontend logs cleared');
+      toastOk('Frontend logs cleared');
       setLogs([]);
       return;
     }
@@ -1324,21 +1325,21 @@ export default function Settings() {
         if (!r?.cleared?.length) {
           toast('Nothing to clear — no Tauri log file on disk yet.', { icon: 'ℹ️' });
         } else {
-          toast.success(`Cleared ${r.cleared.length} Tauri log file(s)`);
+          toastOk(`Cleared ${r.cleared.length} Tauri log file(s)`);
           setLogs([]);
         }
       } catch (e) {
-        toast.error('Failed to clear Tauri logs: ' + e.message);
+        toastErr('Failed to clear Tauri logs: ' + e.message);
       }
       return;
     }
     if (!(await askConfirm('Clear the backend runtime + crash logs? This cannot be undone.', 'Clear logs'))) return;
     try {
       await clearSystemLogs();
-      toast.success('Backend logs cleared');
+      toastOk('Backend logs cleared');
       setLogs([]);
     } catch (e) {
-      toast.error('Failed to clear logs');
+      toastErr('Failed to clear logs');
     }
   };
 
@@ -1603,7 +1604,7 @@ function HotkeyTab() {
         const v = await invoke('get_dictation_shortcut');
         setCurrent(v || '');
       } catch (e) {
-        toast.error(`Could not load shortcut: ${e?.message || e}`);
+        toastErr(`Could not load shortcut: ${e?.message || e}`);
       }
     })();
   }, [tauri]);
@@ -1638,11 +1639,11 @@ function HotkeyTab() {
       const saved = await invoke('set_dictation_shortcut', { accelerator: pending });
       setCurrent(saved);
       setPending('');
-      toast.success(`Dictation shortcut set to ${saved}`);
+      toastOk(`Dictation shortcut set to ${saved}`);
     } catch (e) {
       // Common cause: the OS or another app already owns the combo. Surface
       // the raw error so the user can pick something else.
-      toast.error(`Couldn't register: ${e?.message || e}`);
+      toastErr(`Couldn't register: ${e?.message || e}`);
     } finally {
       setSaving(false);
     }
@@ -1657,9 +1658,9 @@ function HotkeyTab() {
       });
       setCurrent(saved);
       setPending('');
-      toast.success('Reset to default');
+      toastOk('Reset to default');
     } catch (e) {
-      toast.error(`Reset failed: ${e?.message || e}`);
+      toastErr(`Reset failed: ${e?.message || e}`);
     } finally {
       setSaving(false);
     }
@@ -1740,15 +1741,15 @@ function CredentialsTab({ info }) {
         body: JSON.stringify({ key, value }),
       });
       if (res.ok) {
-        toast.success(t('credentials.saved_session', { key }));
+        toastOk(t('credentials.saved_session', { key }));
         setSaved(prev => ({ ...prev, [key]: true }));
         setValues(prev => ({ ...prev, [key]: '' }));
       } else {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.detail || t('credentials.save_failed'));
+        toastErr(d.detail || t('credentials.save_failed'));
       }
     } catch (e) {
-      toast.error(t('credentials.save_error', { message: e.message }));
+      toastErr(t('credentials.save_error', { message: errMsg(e.message) }));
     } finally {
       setSaving(null);
     }
